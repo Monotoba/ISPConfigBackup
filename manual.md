@@ -1,6 +1,10 @@
+Here's the updated **ISPConfig Backup Script Manual** that includes information about the new database backup features:
+
+---
+
 ### **ISPConfig Backup Script Manual**
 
-This manual describes how to use the latest version of the ISPConfig backup script, which allows you to create a backup of ISPConfig data, including configuration files, email data, SSL certificates, cron jobs, and optionally web data. The script also supports backing up either Apache2 or Nginx configuration files, depending on the server setup.
+This manual describes how to use the latest version of the ISPConfig backup script, which allows you to create a backup of ISPConfig data, including configuration files, email data, SSL certificates, cron jobs, web data, and now, database data. The script supports backing up either Apache2 or Nginx configuration files, depending on the server setup, and includes an option to back up databases (MySQL or MariaDB) if needed.
 
 ---
 
@@ -10,13 +14,14 @@ The backup script is designed to create a compressed backup file (`.tar.gz`) con
 
 - **`--web-data`**: Includes the `/var/www/` web data in the backup.
 - **`--nginx`**: Backs up Nginx configuration files instead of Apache2 configuration files (default is Apache2).
+- **`--databases`**: Backs up the databases used by ISPConfig (MySQL or MariaDB) alongside other configuration files and data.
 
 ---
 
 ### **Usage**
 
-1. **Basic Backup (without Web Data and with Apache2 Configurations)**:
-   - This is the default behavior where ISPConfig data and Apache2 configuration files will be backed up, excluding web data.
+1. **Basic Backup (without Web Data, without Database, and with Apache2 Configurations)**:
+   - This is the default behavior where ISPConfig data, Apache2 configuration files, and mail data are backed up, excluding web data and databases.
    ```bash
    ./backup_ispconfig.sh
    ```
@@ -37,6 +42,18 @@ The backup script is designed to create a compressed backup file (`.tar.gz`) con
    - Use both the `--nginx` and `--web-data` flags to back up Nginx configuration files and include the website data.
    ```bash
    ./backup_ispconfig.sh --nginx --web-data
+   ```
+
+5. **Backup with Databases**:
+   - To include databases (MySQL/MariaDB), use the `--databases` flag. This will back up the database data used by ISPConfig, along with configuration files and data.
+   ```bash
+   ./backup_ispconfig.sh --databases
+   ```
+
+6. **Backup with Nginx Configurations, Web Data, and Databases**:
+   - Use all three flags to back up Nginx configuration files, web data, and databases.
+   ```bash
+   ./backup_ispconfig.sh --nginx --web-data --databases
    ```
 
 ---
@@ -73,10 +90,13 @@ By default, the backup includes the following directories and files:
      - `/etc/nginx/sites-available`
      - `/etc/nginx/sites-enabled`
 
+7. **Databases (optional with `--databases`):**
+   - All databases used by ISPConfig (MySQL/MariaDB) will be backed up, typically using `mysqldump`. The databases are included in the `.tar.gz` backup.
+
 #### **Backup Process**
 
 1. **Backup Creation:**
-   - The script creates a `.tar.gz` archive of the selected directories and configuration files.
+   - The script creates a `.tar.gz` archive of the selected directories, configuration files, and database dumps.
    - The archive file is named `ispconfig_backup_YYYYMMDD_HHMMSS.tar.gz`, where the timestamp corresponds to the date and time of the backup.
 
 2. **Backup Location:**
@@ -106,14 +126,20 @@ To restore the backup on the new server, follow these steps:
      tar -xzf /path/to/backup/directory/ispconfig_backup_YYYYMMDD_HHMMSS.tar.gz -C /
      ```
 
-3. **Set Correct Permissions:**
+3. **Restore Databases (if included):**
+   - If you backed up databases, you'll need to restore them using `mysql` or `mariadb`:
+     ```bash
+     mysql -u root -p < /path/to/backup/databases.sql
+     ```
+
+4. **Set Correct Permissions:**
    - Ensure the correct ownership of the restored files. This is especially important for ISPConfig and web data:
      ```bash
      chown -R root:root /usr/local/ispconfig /etc/ispconfig /etc/postfix /etc/dovecot /etc/bind /var/vmail /etc/letsencrypt
      chown -R www-data:www-data /var/www  # For web data
      ```
 
-4. **Restart Services:**
+5. **Restart Services:**
    - Restart the necessary services to apply the restored configurations:
      - For Nginx (if using Nginx):
        ```bash
@@ -123,19 +149,20 @@ To restore the backup on the new server, follow these steps:
        ```bash
        systemctl restart apache2
        ```
-     - Restart other services like Postfix, Dovecot, and BIND as needed:
+     - Restart other services like Postfix, Dovecot, BIND, and MySQL/MariaDB as needed:
        ```bash
-       systemctl restart postfix dovecot bind
+       systemctl restart postfix dovecot bind mysql
        ```
 
 ---
 
 ### **Script Summary**
 
-The updated script provides flexibility for backing up ISPConfig on a server with either Apache2 or Nginx and optionally includes web data. The following key features have been added:
+The updated script provides flexibility for backing up ISPConfig on a server with either Apache2 or Nginx and optionally includes web data and databases. The following key features have been added:
 
 1. **`--web-data`**: Includes web data (`/var/www/`) in the backup.
 2. **`--nginx`**: Backs up Nginx configuration files instead of Apache2.
+3. **`--databases`**: Includes MySQL or MariaDB databases used by ISPConfig in the backup.
 
 The script generates a `.tar.gz` backup file, which you can then transfer to a new server using `scp` and restore by extracting it and ensuring the correct permissions and service restarts.
 
@@ -143,4 +170,8 @@ The script generates a `.tar.gz` backup file, which you can then transfer to a n
 
 ### **Conclusion**
 
-This backup solution ensures that you can easily migrate ISPConfig setups, including all essential configuration files, mail data, SSL certificates, and web data, from one server to another. Whether using Apache2 or Nginx, the script adapts to your server configuration and makes the backup process efficient and simple.
+This backup solution ensures that you can easily migrate ISPConfig setups, including all essential configuration files, mail data, SSL certificates, web data, and databases, from one server to another. Whether using Apache2 or Nginx, the script adapts to your server configuration and makes the backup process efficient and simple.
+
+---
+
+This version of the manual now includes instructions for the new database backup feature and provides a comprehensive guide on how to use the script with the added database functionality.
