@@ -1,7 +1,3 @@
-Here's the updated **ISPConfig Backup Script Manual** that includes information about the new database backup features:
-
----
-
 ### **ISPConfig Backup Script Manual**
 
 This manual describes how to use the latest version of the ISPConfig backup script, which allows you to create a backup of ISPConfig data, including configuration files, email data, SSL certificates, cron jobs, web data, and now, database data. The script supports backing up either Apache2 or Nginx configuration files, depending on the server setup, and includes an option to back up databases (MySQL or MariaDB) if needed.
